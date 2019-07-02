@@ -26,7 +26,7 @@ double *** ZeroPadding2D(double *** Layers, int* LayDim, int * ZeroNum);
 double *** LoadImageAResize(char * filename, int * size);
 
 /*this function for now only works for bmp files.*/
-double *** getData(char * path);
+double *** getData(char * path, int ** size);
 
 /*this function resize the original image WITHOUT changing number of layers*/
 double *** resize(double *** Layers, int * startSize, int * endSize);

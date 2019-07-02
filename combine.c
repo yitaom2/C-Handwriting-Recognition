@@ -366,15 +366,81 @@ void test_ZEROPADDING() {
 }
 
 int main() {
-	double *** inuse = getData("testImage-PNG.bmp");
-	int startSize[2] = {422, 750};
-	int endSize[2] = {200, 200};
-	inuse = resize(inuse, startSize, endSize);
-	for (int i = 0; i < 200; i++) {
-		for (int j = 0; j < 200; j++) {
-			printf("%f ", inuse[0][i][j]);
+	int * size = calloc(3, sizeof(int));
+	size[0] = 3;
+	int * temp = size + 1;
+	double *** load_data = getData("testImage-PNG.bmp", &(temp));
+
+	int endSize[2] = {224, 224};
+	double *** resize_data = resize(load_data, size + 1, endSize);
+	size[1] = endSize[0]; size[2] = endSize[1];
+	/*the last one with non-zero data without weight*/
+	// for (int i = 0; i < 224; i++) {
+	// 	for (int j = 0; j < 224; j++) {
+	// 		printf("%f ", resize_data[0][i][j]);
+	// 	}
+	// 	printf("\n"); // this is to make searching easy.
+	// }
+
+	int ZeroNum[2] = {1, 1};
+	double *** zero_1_1 = ZeroPadding2D(resize_data, size, ZeroNum);
+	size[1] += 2 * ZeroNum[0]; size[2] += 2 * ZeroNum[1];
+
+	int maskDim[3] = {64, 3, 3};
+	double *** mask = calloc(maskDim[0], sizeof(double**));
+	for (int i = 0; i < maskDim[0]; i++) {
+		mask[i] = calloc(maskDim[1], sizeof(double*));
+		for (int j = 0; j < maskDim[1]; j++) {
+			mask[i][j] = calloc(maskDim[2], sizeof(double));
 		}
-		printf("\n");
 	}
+	double *** conv_1_1 = convolution2D(zero_1_1, mask, size, maskDim);
+	size[0] = maskDim[0]; size[1] -= (maskDim[1] - 1); size[2] -= (maskDim[2] - 1);
+
+	double *** zero_1_2 = ZeroPadding2D(conv_1_1, size, ZeroNum);
+	size[1] += 2 * ZeroNum[0]; size[2] += 2 * ZeroNum[1];
+
+	//mask can be the same or may need modification
+	mask = calloc(maskDim[0], sizeof(double**));
+	for (int i = 0; i < maskDim[0]; i++) {
+		mask[i] = calloc(maskDim[1], sizeof(double*));
+		for (int j = 0; j < maskDim[1]; j++) {
+			mask[i][j] = calloc(maskDim[2], sizeof(double));
+		}
+	}
+	double *** conv_1_2 = convolution2D(zero_1_2, mask, size, maskDim);
+	size[0] = maskDim[0]; size[1] -= (maskDim[1] - 1); size[2] -= (maskDim[2] - 1);
+
+	int strides[2] = {2, 2};
+	int poolDim[2] = {2, 2};
+	double *** pool_1 = MaxPooling2D(conv_1_2, strides, size, poolDim);
+	size[1] /= poolDim[0]; size[2] /= poolDim[1];
+
+
+
+
+
+
+	double * flat_e = Flatten(pool_1, size);
+	size[0] = size[0] * size[1] * size[2];
+
+  double ** Weight = calloc(64 * 112 * 112, sizeof(double*));
+  for (int i = 0; i < 64 * 112 * 112; i++) {
+    Weight[i] = calloc(2, sizeof(double));
+  }
+  double * dense_e = Dense(flat_e, Weight, 64 * 112 * 112, 10);
+
+  Weight = calloc(10, sizeof(double*));
+  for (int i = 0; i < 10; i++) {
+    Weight[i] = calloc(5, sizeof(double));
+  }
+  double * drop_e = Dropout(dense_e, &Weight, 10, 0.5);
+
+	for (int i = 0; i < 6; i++) {
+		// for (int j = 0; j < 112; j++) {
+			printf("%f ", drop_e[i]);
+		// }
+	}
+
 	return 0;
 }

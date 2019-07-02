@@ -79,7 +79,6 @@ double * Dense(double* Layer, double** Weight, int WeiDimS, int WeiDimE) {
   double * ret = calloc(WeiDimE, sizeof(double));
   for (int count = 0; count < WeiDimS; count++) {
     for (int neur = 0; neur < WeiDimE; neur++) {
-      printf("%d: + %f * %f\n", neur, Weight[count][neur], Layer[count]);
       ret[neur] += Weight[count][neur] * Layer[count];
     }
   }
@@ -90,7 +89,8 @@ double * Flatten(double*** Layers, int* LayDim) {
   int LayDimNum = *LayDim;
   int LayDimH = *(LayDim + 1);
   int LayDimV = *(LayDim + 2);
-  double * ret = calloc(1, LayDimNum * LayDimH * LayDimV * sizeof(double));
+  double * ret = calloc(LayDimNum * LayDimH * LayDimV, sizeof(double));
+  printf("%d %d %d", LayDimNum, LayDimH, LayDimV);
   for (int i = 0; i < LayDimNum; i++) {
     for (int j = 0; j < LayDimH; j++) {
       for (int k = 0; k < LayDimV; k++) {
@@ -107,7 +107,6 @@ double * Dropout(double * Image, double *** Weight, int ImageDim, double dropP) 
   int count = 0;
   while (count < numToKeep) {
     int temp = random() % ImageDim;
-    printf("%d\n", temp);
     if (filter[temp] != 1) {
       filter[temp] = 1;
       count++;
@@ -154,7 +153,7 @@ double *** ZeroPadding2D(double *** Layers, int* LayDim, int * ZeroNum) {
   return ret;
 }
 
-double *** getData(char * path) {
+double *** getData(char * path, int ** size) {
   FILE *fp=fopen(path,"r");
 
   int width, height, offset;
@@ -166,7 +165,6 @@ double *** getData(char * path) {
 	fseek(fp, 0, SEEK_SET);
 
 	unsigned char* pix=NULL;
-	printf("%d, %d\n", height, width);
 	fseek(fp,offset, SEEK_SET);
 	int stride = width * 4;
 
@@ -186,6 +184,15 @@ double *** getData(char * path) {
 			ret[2][height - 1 - i][width - 1 - j] = pix[j * 3];
 		}
 	}
+  // for (int i = 0; i < height; i++) {
+  //   printf("%d\n", i);
+	// 	for (int j = 0; j < width; j++) {
+  //     printf("%f", ret[0][i][j]);
+	// 	}
+	// }
+
+  *(*(size)) = height;
+  *(*(size) + 1) = width;
 	return ret;
 }
 
