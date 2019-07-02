@@ -9,127 +9,134 @@
 
 #define PATH "testImage-PNG.bmp"
 
-long getWidth(FILE *fp)
-{
-	long width;
-	fseek(fp,18,SEEK_SET);
-	fread(&width,1,4,fp);
-	return width;
-}
-
-//获得图片的高度 ，在22-25字节
-long getHeight(FILE *fp)
-{
-	long height;
-	fseek(fp,22,SEEK_SET);
-	fread(&height,1,4,fp);
-	return height;
-}
-
-//获得每个像素的位数,在28-29字节
-unsigned short getBit(FILE *fp)
-{
-	unsigned short bit;
-	fseek(fp,28,SEEK_SET);
-	fread(&bit,1,2,fp);
-	return bit;
-}
-
-//获得数据的起始位置
-unsigned int getOffSet(FILE *fp)
-{
-	unsigned int OffSet;
-	fseek(fp,10L,SEEK_SET);
-	fread(&OffSet,1,4,fp);
-	return OffSet;
-}
-
-//获得图像的数据
-void getData(FILE* fp,unsigned char *r,unsigned char *g,unsigned char *b)
-{
-    FILE* fpr;
-	FILE* fpg;
-	FILE* fpb;
-
-	int i, j=0;
-	int stride;
-	unsigned char* pix=NULL;
-	long height,width;
-	height=getHeight(fp);
-	width=getWidth(fp);
-
-	fseek(fp, getOffSet(fp), SEEK_SET);	//找到位图的数据区
-
-	stride=(24*width+31)/8;	//对齐,计算一个width有多少个8位
-	stride=stride/4*4;		//取四的倍数 r,g,b,alph
-
-	//写入数组
-	pix=(unsigned char *)malloc(stride);
-	for(j=0;j<height;j++)
-	{
-	   fread(pix, 1, stride, fp);
-	   for(i=0;i<width;i++)
-		{
-			*(r+(height-1-j)+i)=pix[i*3+2];
-			*(g+(height-1-j)+i)=pix[i*3+1];
-			*(b+(height-1-j)+i)=pix[i*3];
-		}
-	}
-
-	//写入文件
-	fpr=fopen("d:\\bmpr.txt","w+");
-	fpg=fopen("d:\\bmpg.txt","w+");
-	fpb=fopen("d:\\bmpb.txt","w+");
-
-	for(i =0; i < height; i++)
-     {
-		for(j = 0; j < width-1; j++)
-		{
-		fprintf(fpr,"%4d",*(r+i+j));
-		fprintf(fpg,"%4d",*(g+i+j));
-		fprintf(fpb,"%4d",*(b+i+j));
-		}
-		fprintf(fpr,"%4d",*(r+i+j));
-		fprintf(fpg,"%4d",*(g+i+j));
-		fprintf(fpb,"%4d",*(b+i+j));
- 	}
-
-	fclose(fpr);
-	fclose(fpg);
-	fclose(fpb);
-
-}
-
-
-int main()
-{
-	long width,height;
-	FILE *fp=fopen(PATH,"r");
-	unsigned char *r,*g,*b;
-	int i,j;
-	r=(unsigned char *)malloc(4000);
-	b=(unsigned char *)malloc(4000);
-	g=(unsigned char *)malloc(4000);
-
-	if(IsBitMap(fp))
-		printf("该文件是位图!\n");
-	else
-		{
-			printf("该文件不是位图!\n");
-			fclose(fp);
-			return 0;
-		}
-
-	printf("width=%ld\nheight=%ld\n",getWidth(fp),getHeight(fp));
-
-	printf("该图像是%d位图\n",getBit(fp));
-
-	printf("OffSet=%d\n",getOffSet(fp));
-
-	getData(fp,r,g,b);
-
-	return 1;
-}
+// int getWidth(FILE *fp)
+// {
+// 	int width;
+// 	fseek(fp,18,SEEK_SET);
+// 	fread(&width,1,4,fp);
+// 	fseek(fp, 0, SEEK_SET);
+// 	return width;
+// }
+//
+// //获得图片的高度 ，在22-25字节
+// int getHeight(FILE *fp)
+// {
+// 	int height;
+// 	fseek(fp,22,SEEK_SET);
+// 	fread(&height,1,4,fp);
+// 	fseek(fp, 0, SEEK_SET);
+// 	return height;
+// }
+//
+// //获得每个像素的位数,在28-29字节
+// unsigned short getBit(FILE *fp)
+// {
+// 	unsigned short bit;
+// 	fseek(fp,28,SEEK_SET);
+// 	fread(&bit,1,2,fp);
+// 	return bit;
+// }
+//
+// //获得数据的起始位置
+// unsigned int getOffSet(FILE *fp)
+// {
+// 	unsigned int OffSet;
+// 	fseek(fp,10L,SEEK_SET);
+// 	fread(&OffSet,1,4,fp);
+// 	fseek(fp, 0, SEEK_SET);
+// 	return OffSet;
+// }
+//
+// //获得图像的数据
+// double *** getData(FILE* fp)
+// {
+//   //   FILE* fpr;
+// 	// FILE* fpg;
+// 	// FILE* fpb;
+//
+// 	int i, j=0;
+// 	unsigned char* pix=NULL;
+// 	int height = getHeight(fp);
+// 	int width = getWidth(fp);
+// 	printf("%d, %d\n", height, width);
+//
+// 	fseek(fp, getOffSet(fp), SEEK_SET);	//找到位图的数据区
+//
+// 	// stride=(24*width+31)/8;
+// 	// stride=stride/4*4;
+//
+// 	// 写入数组
+// 	int stride = width * 4;
+//
+// 	pix=(unsigned char *)malloc(stride);
+// 	double *** ret = calloc(3, sizeof(double **));
+// 	*(ret) = calloc(height, sizeof(double*));
+// 	*(ret + 1) = calloc(height, sizeof(double*));
+// 	*(ret + 2) = calloc(height, sizeof(double*));
+// 	// double ** red = calloc(height, sizeof(double*));
+// 	// double ** blue = calloc(height, sizeof(double*));
+// 	// double ** green = calloc(height, sizeof(double*));
+// 	for (int i = 0; i < height; i++) {
+// 		*(*ret + (height - 1 - i)) = calloc(width, sizeof(double));
+// 		*(*(ret + 1) + (height - 1 - i)) = calloc(width, sizeof(double));
+// 		*(*(ret + 2) + (height - 1 - i)) = calloc(width, sizeof(double));
+//
+// 		fread(pix, 1, stride, fp);
+// 		for (int j = 0; j < width; j++) {
+// 			ret[0][height - 1 - i][width - 1 - j] = pix[j * 3 + 2];
+// 			ret[1][height - 1 - i][width - 1 - j] = pix[j * 3 + 1];
+// 			ret[2][height - 1 - i][width - 1 - j] = pix[j * 3];
+// 		}
+// 	}
+//
+// 	for (int i = 0; i < height; i++) {
+// 		for (int j = 0; j < width; j++) {
+// 			printf("(%f, %f, %f) ", ret[0][i][j], ret[1][i][j], ret[2][i][j]);
+// 		}
+// 	}
+//
+// 	return ret;
+//
+// 	//写入文件
+// 	// fpr=fopen("d:\\bmpr.txt","w+");
+// 	// fpg=fopen("d:\\bmpg.txt","w+");
+// 	// fpb=fopen("d:\\bmpb.txt","w+");
+// 	//
+// 	// for(i =0; i < height; i++)
+//   //    {
+// 	// 	for(j = 0; j < width-1; j++)
+// 	// 	{
+// 	// 	fprintf(fpr,"%4d",*(r+i * width +j));
+// 	// 	fprintf(fpr,"(%d, %d)", i, j);
+// 	// 	fprintf(fpg,"%4d",*(g+i * width+j));
+// 	// 	fprintf(fpb,"%4d",*(b+i * width+j));
+// 	// 	}
+// 	// 	fprintf(fpr,"%4d",*(r+i * width+j));
+// 	// 	fprintf(fpg,"%4d",*(g+i * width+j));
+// 	// 	fprintf(fpb,"%4d",*(b+i+j));
+//  	// }
+//
+// 	// fclose(fpr);
+// 	// fclose(fpg);
+// 	// fclose(fpb);
+//
+// }
+//
+//
+// int main()
+// {
+// 	long width,height;
+// 	FILE *fp=fopen(PATH,"r");
+// 	unsigned char *r,*g,*b;
+// 	int i,j;
+// 	r=(unsigned char *)malloc(4000);
+// 	b=(unsigned char *)malloc(4000);
+// 	g=(unsigned char *)malloc(4000);
+//
+// 	getData(fp);
+//
+// 	return 0;
+// }
 
 void test_CONV() {
   int LayDim[3] = {2, 6, 6};
@@ -356,4 +363,18 @@ void test_ZEROPADDING() {
     printf("-----------------------\n");
   }
   printf("=================================\n");
+}
+
+int main() {
+	double *** inuse = getData("testImage-PNG.bmp");
+	int startSize[2] = {422, 750};
+	int endSize[2] = {200, 200};
+	inuse = resize(inuse, startSize, endSize);
+	for (int i = 0; i < 200; i++) {
+		for (int j = 0; j < 200; j++) {
+			printf("%f ", inuse[0][i][j]);
+		}
+		printf("\n");
+	}
+	return 0;
 }

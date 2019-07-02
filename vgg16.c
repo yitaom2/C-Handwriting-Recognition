@@ -154,13 +154,73 @@ double *** ZeroPadding2D(double *** Layers, int* LayDim, int * ZeroNum) {
   return ret;
 }
 
-double *** LoadImageAResize(char * filename, int * size) {
-  FILE *fp =fopen("testImage-PNG.bmp","r");
-  int test = 1;
-  while(test == 1) {
-    char store;
-    test = fread(&store, 1, 1, fp);
-    printf("%c", store);
+double *** getData(char * path) {
+  FILE *fp=fopen(path,"r");
+
+  int width, height, offset;
+	fseek(fp,18,SEEK_SET);
+	fread(&width,1,4,fp);
+  fread(&height,1,4,fp);
+  fseek(fp,10L,SEEK_SET);
+	fread(&offset,1,4,fp);
+	fseek(fp, 0, SEEK_SET);
+
+	unsigned char* pix=NULL;
+	printf("%d, %d\n", height, width);
+	fseek(fp,offset, SEEK_SET);
+	int stride = width * 4;
+
+	pix=(unsigned char *)malloc(stride);
+	double *** ret = calloc(3, sizeof(double **));
+	*(ret) = calloc(height, sizeof(double*));
+	*(ret + 1) = calloc(height, sizeof(double*));
+	*(ret + 2) = calloc(height, sizeof(double*));
+	for (int i = 0; i < height; i++) {
+		*(*ret + (height - 1 - i)) = calloc(width, sizeof(double));
+		*(*(ret + 1) + (height - 1 - i)) = calloc(width, sizeof(double));
+		*(*(ret + 2) + (height - 1 - i)) = calloc(width, sizeof(double));
+		fread(pix, 1, stride, fp);
+		for (int j = 0; j < width; j++) {
+			ret[0][height - 1 - i][width - 1 - j] = pix[j * 3 + 2];
+			ret[1][height - 1 - i][width - 1 - j] = pix[j * 3 + 1];
+			ret[2][height - 1 - i][width - 1 - j] = pix[j * 3];
+		}
+	}
+	return ret;
+}
+
+double *** resize(double *** Layers, int * startSize, int * endSize) {
+  int sH = *startSize;
+  int sV = *(startSize + 1);
+  int eH = *endSize;
+  int eV = *(endSize + 1);
+
+  double *** ret = calloc(3, sizeof(double **));
+  for (int layer = 0; layer < 3; layer++) {
+    *(ret + layer) = calloc(eH, sizeof(double *));
+    for (int i = 0; i < eH; i++) {
+      *(*(ret + layer) + i) = calloc(eV, sizeof(double));
+      for (int j = 0; j < eV; j++) {
+        double reScaleH = (double)i * ((double)sH / (double)eH);
+        double reScaleV = (double)j * ((double)sV / (double)eV);
+
+        int lowerH = reScaleH;
+        int higherH = (reScaleH + 1);
+        int lowerV = reScaleV;
+        int higherV = (reScaleV + 1);
+        // if (i == 1 && j == 1) {printf("(%f, %f) -> %d, %d, %d, %d\n", reScaleH, reScaleV, lowerH, higherH, lowerV, higherV);}
+        /* following the function as follows:
+        f(x,y)=f(0,0)(1-x)(1-y)+f(1,0)x(1-y)+f(0,1)(1-x)y+f(1,1)xy
+        */
+        /*1 - x*/
+        double _x = (double)higherH - reScaleH;
+        double x = reScaleH - (double)lowerH;
+        double _y = (double)higherV - reScaleV;
+        double y = reScaleV - (double)lowerV;
+        ret[layer][i][j] = Layers[layer][lowerH][lowerV] * _x * _y + Layers[layer][higherH][lowerV] * x * _y
+         + Layers[layer][lowerH][higherV] * _x * y + Layers[layer][higherH][higherV] * x * y;
+      }
+    }
   }
-  fclose(fp);
+  return ret;
 }
