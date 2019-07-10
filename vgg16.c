@@ -1,37 +1,59 @@
 #include "vgg16.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include <math.h>
 
-double*** convolution2D(double*** Layers, double*** mask, int* LayDim, int* maskDim) {
+double*** convolution2D(double*** Layers, double*** mask, int* LayDim, int* maskDim, int stride, char* ZeroPadding) {
   //numbers of masks, horizontal lines in a mask, vertical lines in a mask
   int maskDimNum = *maskDim;
   int maskDimH = *(maskDim + 1);
   int maskDimV= *(maskDim + 2);
   //dimension of layers, horizontal lines in a layer, vertical lines in a layer
-  int LayDimNum = *LayDim;
-  int LayDimH = *(LayDim + 1);
-  int LayDimV = *(LayDim + 2);
+  int inputNum = *LayDim;
+  int inputH = *(LayDim + 1);
+  int inputV = *(LayDim + 2);
+
+  int outputH;
+  int outputV;
+  int zeroH;
+  int zeroV;
+  if (strncmp(ZeroPadding, "SAME", 4) == 0) {
+    outputH = floor((inputH - 1) / stride + 1); if (outputH < 0) {outputH = 0;}
+    outputV = floor((inputV - 1) / stride + 1); if (outputV < 0) {outputV = 0;}
+    zeroH = stride * (outputH - 1) + maskDimH - inputH; if (zeroH < 0) {zeroH = 0;}
+    zeroV = stride * (outputV - 1) + maskDimV - inputV; if (zeroV < 0) {zeroV = 0;}
+  } else {
+    outputH = floor((inputH - maskDimH) / stride + 1); if (outputH < 0) {outputH = 0;}
+    outputV = floor((inputV - maskDimV) / stride + 1); if (outputV < 0) {outputV = 0;}
+    zeroH = stride * (outputH - 1) + maskDimH - inputH; if (zeroH > 0) {zeroH = 0;}
+    zeroV = stride * (outputV - 1) + maskDimV - inputV; if (zeroV > 0) {zeroV = 0;}
+  }
+  printf("%d %d %d %d\n", outputH, outputV, zeroH, zeroV);
   double *** ret = calloc(maskDimNum, sizeof(double**));
   for (int masknum = 0; masknum < maskDimNum; masknum++) {
     //for each mask a different operation
-    *(ret + masknum) = calloc(LayDimH - maskDimH + 1, sizeof(double*));
-    for (int createintarray = 0; createintarray < LayDimH - maskDimH + 1; createintarray++) {
-      *(*(ret + masknum) + createintarray) = calloc(LayDimV - maskDimV + 1, sizeof(double));
+    *(ret + masknum) = calloc(outputH, sizeof(double*));
+    for (int createintarray = 0; createintarray < outputH; createintarray++) {
+      *(*(ret + masknum) + createintarray) = calloc(outputV, sizeof(double));
     }
-    for (int layernum = 0; layernum < LayDimNum; layernum++) {
-      //use layernum in the outer layer to avoid jumping arround memories
-      double ** temporiLayer = *(Layers + layernum);
-      for (int layerh = 0; layerh < LayDimH - maskDimH + 1; layerh++) {
-        for (int layerv = 0; layerv < LayDimV- maskDimV + 1; layerv++) {
-          double ** masktemp = *(mask + masknum);
-          for (int maskh = 0; maskh < maskDimH; maskh++) {
-            for (int maskv = 0; maskv < maskDimV; maskv++) {
-              // printf("%f\n", *(*(*(ret + masknum) + layerh) + layerv));
-              // printf("ret: L%d (H%d, V%d): + %f * %f; mask: (%d, %d), layer: (%d, %d, %d)\n", masknum, layerh, layerv, (*(*(masktemp + maskh) + maskv)), *(*(temporiLayer + layerh + maskh) + layerv + maskv), maskh, maskv, layernum, layerh + maskh, layerv + maskv);
-              *(*(*(ret + masknum) + layerh) + layerv) += (*(*(masktemp + maskh) + maskv)) * (*(*(temporiLayer + layerh + maskh) + layerv + maskv));
+    for (int layernum = 0; layernum < inputNum; layernum++) {
+      for (int outputh = 0; outputh < outputH; outputh++) {
+        for (int outputv = 0; outputv < outputV; outputv++) {
+          int starth = outputh * stride;
+          int startv = outputv * stride;
+          if (zeroH > 0) starth -= floor(zeroH / 2);
+          if (zeroV > 0) startv -= floor(zeroV / 2);
+          // printf("(%d, %d)\n", starth, startv);
+          for (int i = 0; i < maskDimH; i++) {
+            for (int j = 0; j < maskDimV; j++) {
+              if (starth + i < 0 || startv + j < 0 || starth + i >= inputH || startv + j >= inputV) {
+                continue;
+              }
+              // printf("(%d, %d) += mask(%d, %d) * origin(%d , %d)\n", outputh, outputv, i, j, starth + i, startv + j);
+              ret[masknum][outputh][outputv] += mask[masknum][i][j] * Layers[layernum][starth + i][startv + j];
             }
           }
-
         }
       }
     }
@@ -39,38 +61,74 @@ double*** convolution2D(double*** Layers, double*** mask, int* LayDim, int* mask
   return ret;
 }
 
-double *** MaxPooling2D(double *** Layers, int* strides, int* LayDim, int* maskDim) {
+double *** MaxPooling2D(double *** Layers, int* LayDim, int* maskDim, int stride, char* ZeroPadding) {
   int maskDimH = *maskDim;
   int maskDimV= *(maskDim + 1);
   //dimension of layers, horizontal lines in a layer, vertical lines in a layer
-  int LayDimNum = *LayDim;
-  int LayDimH = *(LayDim + 1);
-  int LayDimV = *(LayDim + 2);
-  int strideH = *strides;
-  int strideV = *(strides + 1);
+  int inputNum = *LayDim;
+  int inputH = *(LayDim + 1);
+  int inputV = *(LayDim + 2);
 
-  double *** ret = calloc(LayDimNum, sizeof(double**));
-  for (int laynum = 0; laynum < LayDimNum; laynum++) {
+  int outputH;
+  int outputV;
+  int zeroH;
+  int zeroV;
+  if (strncmp(ZeroPadding, "SAME", 4) == 0) {
+    outputH = floor((inputH - 1) / stride + 1); if (outputH < 0) {outputH = 0;}
+    outputV = floor((inputV - 1) / stride + 1); if (outputV < 0) {outputV = 0;}
+    zeroH = stride * (outputH - 1) + maskDimH - inputH; if (zeroH < 0) {zeroH = 0;}
+    zeroV = stride * (outputV - 1) + maskDimV - inputV; if (zeroV < 0) {zeroV = 0;}
+  } else {
+    outputH = floor((inputH - maskDimH) / stride + 1); if (outputH < 0) {outputH = 0;}
+    outputV = floor((inputV - maskDimV) / stride + 1); if (outputV < 0) {outputV = 0;}
+    zeroH = stride * (outputH - 1) + maskDimH - inputH; if (zeroH > 0) {zeroH = 0;}
+    zeroV = stride * (outputV - 1) + maskDimV - inputV; if (zeroV > 0) {zeroV = 0;}
+  }
+  printf("%d %d %d %d\n", outputH, outputV, zeroH, zeroV);
+
+  double *** ret = calloc(inputNum, sizeof(double**));
+  for (int laynum = 0; laynum < inputNum; laynum++) {
     //for each mask a different operation
-    *(ret + laynum) = calloc(LayDimH / strideH, sizeof(double*));
-    for (int createintarray = 0; createintarray < LayDimH / maskDimH; createintarray++) {
-      *(*(ret + laynum) + createintarray) = calloc(LayDimV / maskDimV, sizeof(double));
+    *(ret + laynum) = calloc(outputH, sizeof(double*));
+    for (int createintarray = 0; createintarray < outputH; createintarray++) {
+      *(*(ret + laynum) + createintarray) = calloc(outputV, sizeof(double));
     }
     double ** retToFillLayer = *(ret + laynum);
-    for (int layerh = 0; layerh < LayDimH / strideH; layerh++) {
-      for (int layerv = 0; layerv < LayDimV / maskDimV; layerv++) {
+    for (int outputh = 0; outputh < outputH; outputh++) {
+      for (int outputv = 0; outputv < outputV; outputv++) {
+        int starth = outputh * stride;
+        int startv = outputv * stride;
+        if (zeroH > 0) starth -= floor(zeroH / 2);
+        if (zeroV > 0) startv -= floor(zeroV / 2);
         double max = -1000;
-        for (int maskh = 0; maskh < maskDimH; maskh++) {
-          for (int maskv = 0; maskv < maskDimV; maskv++) {
-            double temp = Layers[laynum][layerh * strideH + maskh][layerv * strideV + maskv];
+        for (int i = 0; i < maskDimH; i++) {
+          for (int j = 0; j < maskDimV; j++) {
+            if (starth + i < 0 || startv + j < 0 || starth + i >= inputH || startv + j >= inputV) {
+              continue;
+            }
+            double temp = Layers[laynum][starth + i][startv + j];
             if (temp > max) {
               max = temp;
             }
           }
         }
-        retToFillLayer[layerh][layerv] = max;
+        retToFillLayer[outputh][outputv] = max;
       }
     }
+    // for (int layerh = 0; layerh < inputH / stride; layerh++) {
+    //   for (int layerv = 0; layerv < inputV / maskDimV; layerv++) {
+    //     double max = -1000;
+    //     for (int maskh = 0; maskh < maskDimH; maskh++) {
+    //       for (int maskv = 0; maskv < maskDimV; maskv++) {
+    //         double temp = Layers[laynum][layerh * stride + maskh][layerv * stride + maskv];
+    //         if (temp > max) {
+    //           max = temp;
+    //         }
+    //       }
+    //     }
+    //     retToFillLayer[layerh][layerv] = max;
+    //   }
+    // }
   }
   return ret;
 }
@@ -126,30 +184,6 @@ double * Dropout(double * Image, double *** Weight, int ImageDim, double dropP) 
   }
   free((*Weight));
   (*Weight) = weightR;
-  return ret;
-}
-
-double *** ZeroPadding2D(double *** Layers, int* LayDim, int * ZeroNum) {
-  //dimension of layers, horizontal lines in a layer, vertical lines in a layer
-  int LayDimNum = *LayDim;
-  int LayDimH = *(LayDim + 1);
-  int LayDimV = *(LayDim + 2);
-  int ZeroNumH = *ZeroNum;
-  int ZeroNumV= *(ZeroNum + 1);
-
-  double *** ret = calloc(LayDimNum, sizeof(double**));
-  for (int laynum = 0; laynum < LayDimNum; laynum++) {
-    //for each mask a different operation
-    *(ret + laynum) = calloc(LayDimH + 2 * ZeroNumH, sizeof(double*));
-    for (int i = 0; i < LayDimH + 2 * ZeroNumH; i++) {
-      *(*(ret + laynum) + i) = calloc(LayDimV + 2 * ZeroNumV, sizeof(double));
-      if (i >= ZeroNumH && i < LayDimH + ZeroNumH) {
-        for (int j = ZeroNumH; j < LayDimH + ZeroNumH; j++) {
-          *(*(*(ret + laynum) + i) + j) = Layers[laynum][i - ZeroNumH][j - ZeroNumH];
-        }
-      }
-    }
-  }
   return ret;
 }
 
