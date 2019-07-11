@@ -11,7 +11,7 @@ double*** MaxPooling2D(double *** Layers, int* LayDim, int* maskDim, int stride,
 
 /**
  **/
-double * Dense(double* Layer, double** Weight, int WeiDimS, int WeiDimE);
+double * Dense(double* Layer, double** Weight, int WeiDimS, int WeiDimE, char * activation);
 
 /**
  **/

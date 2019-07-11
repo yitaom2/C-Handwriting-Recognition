@@ -133,12 +133,31 @@ double *** MaxPooling2D(double *** Layers, int* LayDim, int* maskDim, int stride
   return ret;
 }
 
-double * Dense(double* Layer, double** Weight, int WeiDimS, int WeiDimE) {
+double * Dense(double* Layer, double** Weight, int WeiDimS, int WeiDimE, char * activation) {
   double * ret = calloc(WeiDimE, sizeof(double));
   for (int count = 0; count < WeiDimS; count++) {
     for (int neur = 0; neur < WeiDimE; neur++) {
       ret[neur] += Weight[count][neur] * Layer[count];
     }
+  }
+  if (strncmp(activation, "relu", 4) == 0) {
+    for (int i = 0; i < WeiDimE; i++) {
+      ret[i] = abs(ret[i]);
+    }
+  } else if (strncmp(activation, "softmax", 7) == 0) {
+    double sum = 0;
+    printf("layer\n");
+    for (int i = 0; i < WeiDimE; i++) {
+      printf("%f ", ret[i]);
+      ret[i] = exp(ret[i]);
+      sum += ret[i];
+    }
+    printf("\n");
+    for (int i = 0; i < WeiDimE; i++) {
+      printf("%f ", ret[i]);
+      ret[i] = ret[i] / sum;
+    }
+    printf("\n");
   }
   return ret;
 }

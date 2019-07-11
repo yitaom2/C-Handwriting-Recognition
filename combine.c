@@ -4,6 +4,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <math.h>
+#include "data.h"
+#include "image.h"
+#include "data-test.h"
 
 #define BM 19778
 
@@ -268,7 +272,7 @@ void test_DENSE() {
   weight[2][0] = 1.1; weight[2][1] = 2.1; weight[2][2] = 0.1;
   weight[3][0] = 1; weight[3][1] = 1; weight[3][2] = 2;
 
-  double * resultDense = Dense(testNImage, weight, 4, 3);
+  double * resultDense = Dense(testNImage, weight, 4, 3, "relu");
   printf("RESULT-DENSE\n");
   for (int i = 0; i < 3; i++) {
     printf("%f; ", resultDense[i]);
@@ -326,43 +330,43 @@ void test_DROPOUT() {
   printf("=================================\n");
 }
 
-void test_ZEROPADDING() {
-  int Image1 = 2;
-  int Image2 = 6;
-  int Image3 = 6;
-  double *** testNImage = calloc(Image1, sizeof(double**));
-  for (int i = 0; i < Image1; i++) {
-    *(testNImage + i) = calloc(Image2, sizeof(double*));
-    for (int j = 0; j < Image2; j++) {
-      *(*(testNImage + i) + j) = calloc(Image3, sizeof(double));
-    }
-  }
-  for (int i = 0; i < 6; i++) {
-    for (int j = 0; j < 2; j++) {
-      testNImage[j][i][0] = 6;
-      testNImage[j][i][1] = 1;
-      testNImage[j][i][2] = 2;
-      testNImage[j][i][3] = 3;
-      testNImage[j][i][4] = 4;
-      testNImage[j][i][5] = 5;
-    }
-  }
-
-  int LayDim[3] = {2, 6, 6};
-  int ZeroNum[2] = {2, 2};
-  double *** resultZeroPadding = ZeroPadding2D(testNImage, LayDim, ZeroNum);
-  printf("RESULT-ZEROPADDING\n");
-  for (int i = 0; i < 2; i++) {
-    for (int j = 0; j < 10; j++) {
-      for (int k = 0; k < 10; k++) {
-        printf("%f; ", resultZeroPadding[i][j][k]);
-      }
-      printf("\n");
-    }
-    printf("-----------------------\n");
-  }
-  printf("=================================\n");
-}
+// void test_ZEROPADDING() {
+//   int Image1 = 2;
+//   int Image2 = 6;
+//   int Image3 = 6;
+//   double *** testNImage = calloc(Image1, sizeof(double**));
+//   for (int i = 0; i < Image1; i++) {
+//     *(testNImage + i) = calloc(Image2, sizeof(double*));
+//     for (int j = 0; j < Image2; j++) {
+//       *(*(testNImage + i) + j) = calloc(Image3, sizeof(double));
+//     }
+//   }
+//   for (int i = 0; i < 6; i++) {
+//     for (int j = 0; j < 2; j++) {
+//       testNImage[j][i][0] = 6;
+//       testNImage[j][i][1] = 1;
+//       testNImage[j][i][2] = 2;
+//       testNImage[j][i][3] = 3;
+//       testNImage[j][i][4] = 4;
+//       testNImage[j][i][5] = 5;
+//     }
+//   }
+//
+//   int LayDim[3] = {2, 6, 6};
+//   int ZeroNum[2] = {2, 2};
+//   double *** resultZeroPadding = ZeroPadding2D(testNImage, LayDim, ZeroNum);
+//   printf("RESULT-ZEROPADDING\n");
+//   for (int i = 0; i < 2; i++) {
+//     for (int j = 0; j < 10; j++) {
+//       for (int k = 0; k < 10; k++) {
+//         printf("%f; ", resultZeroPadding[i][j][k]);
+//       }
+//       printf("\n");
+//     }
+//     printf("-----------------------\n");
+//   }
+//   printf("=================================\n");
+// }
 
 // void vgg16() {
 //   int * size = calloc(3, sizeof(int));
@@ -442,7 +446,67 @@ void test_ZEROPADDING() {
 // 	// }
 // }
 
+double*** fitMask() {
+  double *** Mask = calloc(1, sizeof(double**));
+  for (int i = 0; i < 1; i++) {
+    *(Mask + i) = calloc(3, sizeof(double*));
+    for (int j = 0; j < 3; j++) {
+      *(*(Mask + i) + j) = calloc(3, sizeof(double));
+      for (int k = 0; k < 3; k++) {
+        Mask[i][j][k] = ConvTest[j][k][i];
+      }
+    }
+  }
+  return Mask;
+}
+
+double** fitWeight(int num) {
+  int Dim1 = 0;
+  int Dim2 = 0;
+  if (num == 1) {
+    Dim1 = 784;
+    Dim2 = 20;
+  } else if (num == 2 || num == 4) {
+    Dim1 = 20;
+    Dim2 = 10;
+  } else {
+    Dim1 = 28 * 28;
+    Dim2 = 20;
+  }
+  double ** Weight = calloc(Dim1, sizeof(double*));
+  for (int i = 0; i < Dim1; i++) {
+    *(Weight + i) = calloc(Dim2, sizeof(double*));
+    for (int j = 0; j < Dim2; j++) {
+      if (num == 1) {
+        Weight[i][j] = Dense1[i][j];
+      } else if (num == 2) {
+        Weight[i][j] = Dense2[i][j];
+      } else if (num == 3) {
+        Weight[i][j] = DenseTest[i][j];
+      } else if (num == 4) {
+        Weight[i][j] = DenseTest_2[i][j];
+      }
+    }
+  }
+  return Weight;
+}
+
+double *** creatImage(int imagenum) {
+  double *** Image = calloc(1, sizeof(double**));
+  *Image = calloc(28, sizeof(double*));
+  for (int i = 0; i < 28; i++) {
+    *(*Image + i) = calloc(28, sizeof(double));
+    for (int j = 0; j < 28; j++) {
+      Image[0][i][j] = oriImage4[i][j];
+    }
+  }
+  return Image;
+}
+
+void image_recognition(int imagenum) {
+  double *** image = createImage(imagenum);
+}
+
 int main() {
-  test_POOL();
-	return 0;
+  return 0;
 }
