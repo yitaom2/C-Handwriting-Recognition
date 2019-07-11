@@ -5,142 +5,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <math.h>
-#include "data.h"
-#include "image.h"
-#include "data-test.h"
-
-#define BM 19778
-
-#define PATH "testImage-PNG.bmp"
-
-// int getWidth(FILE *fp)
-// {
-// 	int width;
-// 	fseek(fp,18,SEEK_SET);
-// 	fread(&width,1,4,fp);
-// 	fseek(fp, 0, SEEK_SET);
-// 	return width;
-// }
-//
-// //获得图片的高度 ，在22-25字节
-// int getHeight(FILE *fp)
-// {
-// 	int height;
-// 	fseek(fp,22,SEEK_SET);
-// 	fread(&height,1,4,fp);
-// 	fseek(fp, 0, SEEK_SET);
-// 	return height;
-// }
-//
-// //获得每个像素的位数,在28-29字节
-// unsigned short getBit(FILE *fp)
-// {
-// 	unsigned short bit;
-// 	fseek(fp,28,SEEK_SET);
-// 	fread(&bit,1,2,fp);
-// 	return bit;
-// }
-//
-// //获得数据的起始位置
-// unsigned int getOffSet(FILE *fp)
-// {
-// 	unsigned int OffSet;
-// 	fseek(fp,10L,SEEK_SET);
-// 	fread(&OffSet,1,4,fp);
-// 	fseek(fp, 0, SEEK_SET);
-// 	return OffSet;
-// }
-//
-// //获得图像的数据
-// double *** getData(FILE* fp)
-// {
-//   //   FILE* fpr;
-// 	// FILE* fpg;
-// 	// FILE* fpb;
-//
-// 	int i, j=0;
-// 	unsigned char* pix=NULL;
-// 	int height = getHeight(fp);
-// 	int width = getWidth(fp);
-// 	printf("%d, %d\n", height, width);
-//
-// 	fseek(fp, getOffSet(fp), SEEK_SET);	//找到位图的数据区
-//
-// 	// stride=(24*width+31)/8;
-// 	// stride=stride/4*4;
-//
-// 	// 写入数组
-// 	int stride = width * 4;
-//
-// 	pix=(unsigned char *)malloc(stride);
-// 	double *** ret = calloc(3, sizeof(double **));
-// 	*(ret) = calloc(height, sizeof(double*));
-// 	*(ret + 1) = calloc(height, sizeof(double*));
-// 	*(ret + 2) = calloc(height, sizeof(double*));
-// 	// double ** red = calloc(height, sizeof(double*));
-// 	// double ** blue = calloc(height, sizeof(double*));
-// 	// double ** green = calloc(height, sizeof(double*));
-// 	for (int i = 0; i < height; i++) {
-// 		*(*ret + (height - 1 - i)) = calloc(width, sizeof(double));
-// 		*(*(ret + 1) + (height - 1 - i)) = calloc(width, sizeof(double));
-// 		*(*(ret + 2) + (height - 1 - i)) = calloc(width, sizeof(double));
-//
-// 		fread(pix, 1, stride, fp);
-// 		for (int j = 0; j < width; j++) {
-// 			ret[0][height - 1 - i][width - 1 - j] = pix[j * 3 + 2];
-// 			ret[1][height - 1 - i][width - 1 - j] = pix[j * 3 + 1];
-// 			ret[2][height - 1 - i][width - 1 - j] = pix[j * 3];
-// 		}
-// 	}
-//
-// 	for (int i = 0; i < height; i++) {
-// 		for (int j = 0; j < width; j++) {
-// 			printf("(%f, %f, %f) ", ret[0][i][j], ret[1][i][j], ret[2][i][j]);
-// 		}
-// 	}
-//
-// 	return ret;
-//
-// 	//写入文件
-// 	// fpr=fopen("d:\\bmpr.txt","w+");
-// 	// fpg=fopen("d:\\bmpg.txt","w+");
-// 	// fpb=fopen("d:\\bmpb.txt","w+");
-// 	//
-// 	// for(i =0; i < height; i++)
-//   //    {
-// 	// 	for(j = 0; j < width-1; j++)
-// 	// 	{
-// 	// 	fprintf(fpr,"%4d",*(r+i * width +j));
-// 	// 	fprintf(fpr,"(%d, %d)", i, j);
-// 	// 	fprintf(fpg,"%4d",*(g+i * width+j));
-// 	// 	fprintf(fpb,"%4d",*(b+i * width+j));
-// 	// 	}
-// 	// 	fprintf(fpr,"%4d",*(r+i * width+j));
-// 	// 	fprintf(fpg,"%4d",*(g+i * width+j));
-// 	// 	fprintf(fpb,"%4d",*(b+i+j));
-//  	// }
-//
-// 	// fclose(fpr);
-// 	// fclose(fpg);
-// 	// fclose(fpb);
-//
-// }
-//
-//
-// int main()
-// {
-// 	long width,height;
-// 	FILE *fp=fopen(PATH,"r");
-// 	unsigned char *r,*g,*b;
-// 	int i,j;
-// 	r=(unsigned char *)malloc(4000);
-// 	b=(unsigned char *)malloc(4000);
-// 	g=(unsigned char *)malloc(4000);
-//
-// 	getData(fp);
-//
-// 	return 0;
-// }
 
 void test_CONV() {
   int LayDim[3] = {2, 6, 6};
@@ -330,183 +194,113 @@ void test_DROPOUT() {
   printf("=================================\n");
 }
 
-// void test_ZEROPADDING() {
-//   int Image1 = 2;
-//   int Image2 = 6;
-//   int Image3 = 6;
-//   double *** testNImage = calloc(Image1, sizeof(double**));
-//   for (int i = 0; i < Image1; i++) {
-//     *(testNImage + i) = calloc(Image2, sizeof(double*));
-//     for (int j = 0; j < Image2; j++) {
-//       *(*(testNImage + i) + j) = calloc(Image3, sizeof(double));
-//     }
-//   }
-//   for (int i = 0; i < 6; i++) {
-//     for (int j = 0; j < 2; j++) {
-//       testNImage[j][i][0] = 6;
-//       testNImage[j][i][1] = 1;
-//       testNImage[j][i][2] = 2;
-//       testNImage[j][i][3] = 3;
-//       testNImage[j][i][4] = 4;
-//       testNImage[j][i][5] = 5;
-//     }
-//   }
-//
-//   int LayDim[3] = {2, 6, 6};
-//   int ZeroNum[2] = {2, 2};
-//   double *** resultZeroPadding = ZeroPadding2D(testNImage, LayDim, ZeroNum);
-//   printf("RESULT-ZEROPADDING\n");
-//   for (int i = 0; i < 2; i++) {
-//     for (int j = 0; j < 10; j++) {
-//       for (int k = 0; k < 10; k++) {
-//         printf("%f; ", resultZeroPadding[i][j][k]);
-//       }
-//       printf("\n");
-//     }
-//     printf("-----------------------\n");
-//   }
-//   printf("=================================\n");
-// }
+double *** ConvWeight(char * layerName, int * layerDim) {
+  double *** weight = calloc(layerDim[0], sizeof(double**));
+  for (int i = 0; i < layerDim[0]; i++) {
+    *(weight + i) = calloc(layerDim[1], sizeof(double*));
 
-// void vgg16() {
-//   int * size = calloc(3, sizeof(int));
-// 	size[0] = 3;
-// 	int * temp = size + 1;
-// 	double *** load_data = getData("testImage-PNG.bmp", &(temp));
-//
-// 	int endSize[2] = {224, 224};
-// 	double *** resize_data = resize(load_data, size + 1, endSize);
-// 	size[1] = endSize[0]; size[2] = endSize[1];
-// 	/*the last one with non-zero data without weight*/
-// 	for (int i = 0; i < 224; i++) {
-// 		for (int j = 0; j < 224; j++) {
-// 			printf("%f ", resize_data[0][i][j]);
-// 		}
-// 		printf("\n"); // this is to make searching easy.
-// 	}
-//
-// 	int ZeroNum[2] = {1, 1};
-// 	double *** zero_1_1 = ZeroPadding2D(resize_data, size, ZeroNum);
-// 	size[1] += 2 * ZeroNum[0]; size[2] += 2 * ZeroNum[1];
-//
-// 	int maskDim[3] = {64, 3, 3};
-// 	double *** mask = calloc(maskDim[0], sizeof(double**));
-// 	for (int i = 0; i < maskDim[0]; i++) {
-// 		mask[i] = calloc(maskDim[1], sizeof(double*));
-// 		for (int j = 0; j < maskDim[1]; j++) {
-// 			mask[i][j] = calloc(maskDim[2], sizeof(double));
-// 		}
-// 	}
-// 	double *** conv_1_1 = convolution2D(zero_1_1, mask, size, maskDim);
-// 	size[0] = maskDim[0]; size[1] -= (maskDim[1] - 1); size[2] -= (maskDim[2] - 1);
-//
-// 	double *** zero_1_2 = ZeroPadding2D(conv_1_1, size, ZeroNum);
-// 	size[1] += 2 * ZeroNum[0]; size[2] += 2 * ZeroNum[1];
-//
-// 	//mask can be the same or may need modification
-// 	mask = calloc(maskDim[0], sizeof(double**));
-// 	for (int i = 0; i < maskDim[0]; i++) {
-// 		mask[i] = calloc(maskDim[1], sizeof(double*));
-// 		for (int j = 0; j < maskDim[1]; j++) {
-// 			mask[i][j] = calloc(maskDim[2], sizeof(double));
-// 		}
-// 	}
-// 	double *** conv_1_2 = convolution2D(zero_1_2, mask, size, maskDim);
-// 	size[0] = maskDim[0]; size[1] -= (maskDim[1] - 1); size[2] -= (maskDim[2] - 1);
-//
-// 	int strides[2] = {2, 2};
-// 	int poolDim[2] = {2, 2};
-// 	double *** pool_1 = MaxPooling2D(conv_1_2, strides, size, poolDim);
-// 	size[1] /= poolDim[0]; size[2] /= poolDim[1];
-//
-//
-//
-//
-//
-//
-// 	double * flat_e = Flatten(pool_1, size);
-// 	size[0] = size[0] * size[1] * size[2];
-//
-//   double ** Weight = calloc(64 * 112 * 112, sizeof(double*));
-//   for (int i = 0; i < 64 * 112 * 112; i++) {
-//     Weight[i] = calloc(2, sizeof(double));
-//   }
-//   double * dense_e = Dense(flat_e, Weight, 64 * 112 * 112, 10);
-//
-//   Weight = calloc(10, sizeof(double*));
-//   for (int i = 0; i < 10; i++) {
-//     Weight[i] = calloc(5, sizeof(double));
-//   }
-//   double * drop_e = Dropout(dense_e, &Weight, 10, 0.5);
-//
-// 	// for (int i = 0; i < 6; i++) {
-// 	// 	// for (int j = 0; j < 112; j++) {
-// 	// 		printf("%f ", drop_e[i]);
-// 	// 	// }
-// 	// }
-// }
+    char filepath[55];
+    sprintf(filepath, "handWritRec/layerData/%s/%d", layerName, i);
+    FILE * weightfile = fopen(filepath, "r");
 
-double*** fitMask() {
-  double *** Mask = calloc(1, sizeof(double**));
-  for (int i = 0; i < 1; i++) {
-    *(Mask + i) = calloc(3, sizeof(double*));
-    for (int j = 0; j < 3; j++) {
-      *(*(Mask + i) + j) = calloc(3, sizeof(double));
-      for (int k = 0; k < 3; k++) {
-        Mask[i][j][k] = ConvTest[j][k][i];
+    for (int j = 0; j < layerDim[1]; j++) {
+      *(*(weight + i) + j) = calloc(layerDim[2], sizeof(double));
+
+      char * buffer = calloc(1000, 1);buffer[999] = '\0';
+      size_t linelength = 0;
+      ssize_t read = getline(&buffer, &linelength, weightfile);
+
+      char * moving = buffer;
+      for (int k = 0; k < layerDim[2]; k++) {
+        sscanf(moving, "%lf", &weight[i][j][k]);
+        moving = strstr(moving, " ") + 1;
       }
+      free(buffer);
     }
+    fclose(weightfile);
   }
-  return Mask;
+  return weight;
 }
 
-double** fitWeight(int num) {
-  int Dim1 = 0;
-  int Dim2 = 0;
-  if (num == 1) {
-    Dim1 = 784;
-    Dim2 = 20;
-  } else if (num == 2 || num == 4) {
-    Dim1 = 20;
-    Dim2 = 10;
-  } else {
-    Dim1 = 28 * 28;
-    Dim2 = 20;
-  }
-  double ** Weight = calloc(Dim1, sizeof(double*));
-  for (int i = 0; i < Dim1; i++) {
-    *(Weight + i) = calloc(Dim2, sizeof(double*));
-    for (int j = 0; j < Dim2; j++) {
-      if (num == 1) {
-        Weight[i][j] = Dense1[i][j];
-      } else if (num == 2) {
-        Weight[i][j] = Dense2[i][j];
-      } else if (num == 3) {
-        Weight[i][j] = DenseTest[i][j];
-      } else if (num == 4) {
-        Weight[i][j] = DenseTest_2[i][j];
-      }
+double ** DenseWeight(char * layerName, int * layerDim) {
+  char filepath[55];
+  sprintf(filepath, "handWritRec/layerData/%s/weight", layerName);
+  FILE * weightfile = fopen(filepath, "r");
+
+  double ** weight = calloc(layerDim[0], sizeof(double*));
+  for (int i = 0; i < layerDim[0]; i++) {
+    *(weight + i) = calloc(layerDim[1], sizeof(double*));
+    char * buffer = calloc(1000, 1);buffer[999] = '\0';
+    size_t linelength = 0;
+    ssize_t read = getline(&buffer, &linelength, weightfile);
+
+    char * moving = buffer;
+    for (int j = 0; j < layerDim[1]; j++) {
+      sscanf(moving, "%lf", &weight[i][j]);
+      moving = strstr(moving, " ") + 1;
     }
+    free(buffer);
   }
-  return Weight;
+  fclose(weightfile);
+  return weight;
 }
 
-double *** creatImage(int imagenum) {
-  double *** Image = calloc(1, sizeof(double**));
-  *Image = calloc(28, sizeof(double*));
+double *** createImage(int imagenum) {
+  char filepath[50];
+  sprintf(filepath, "handWritRec/image/x_test/%d", imagenum);
+
+  FILE * imagefile = fopen(filepath, "r");
+  char buffer[26]; buffer[25] = '\0';
+
+  double *** image = calloc(1, sizeof(double**));
+  *image = calloc(28, sizeof(double*));
   for (int i = 0; i < 28; i++) {
-    *(*Image + i) = calloc(28, sizeof(double));
+    *(*image + i) = calloc(28, sizeof(double));
     for (int j = 0; j < 28; j++) {
-      Image[0][i][j] = oriImage4[i][j];
+      int num = fread(buffer, 25, 1, imagefile);
+      double data = atof(buffer);
+      image[0][i][j] = data;
     }
   }
-  return Image;
+
+  fclose(imagefile);
+  return image;
 }
 
 void image_recognition(int imagenum) {
   double *** image = createImage(imagenum);
+
+  int weightDim1[3] = {16, 3, 3}; int layerDim1[3] = {1, 28, 28};
+  int weightDim2[2] = {12544, 20}; int layerDim2[3] = {16, 28, 28};
+  int weightDim3[2] = {20, 10}; int layerDim3[3] = {1, 28, 28};
+  double *** weight1 = ConvWeight("Conv1", weightDim1);
+  double ** weight2 = DenseWeight("Dense1", weightDim2);
+  double ** weight3 = DenseWeight("Dense2", weightDim3);
+
+  double *** layerConv1 = convolution2D(image, weight1, layerDim1, weightDim1, 1, "SAME");
+  double * layerFlatten = Flatten(layerConv1, layerDim2);
+  double * layerDense1 = Dense(layerFlatten, weight2, 12544, 20, "relu");
+  double * layerDense2 = Dense(layerDense1, weight3, 20, 10, "softmax");
+
+  printf("HERE ARE THE RESULT:\n");
+  for (int i = 0; i < 10; i++) {
+    printf("%f ", layerDense2[i]);
+  }
+  printf("\n");
 }
 
-int main() {
+int main(int argc, char * argv[]) {
+  if (argc <= 1) {
+    printf("enter in the format: ./combine.o [number in range[0, 10000)]\n");
+    exit(0);
+  }
+  int imagenum = atoi(argv[1]);
+  if (imagenum == 0) {
+    printf("currently showing the result of image 0\n");
+    printf("you either entered 0 as the image number or entered a none number variable\n");
+    printf("enter in the format: ./combine.o [number in range[0, 10000)]\n");
+    printf("----------------------------------------------------------\n");
+  }
+  image_recognition(imagenum);
   return 0;
 }

@@ -1,8 +1,8 @@
 CC = gcc
 
-vgg16: combine.o
-	./combine.o > vgg16
-
+# vgg16: combine.o
+# 	./combine.o > vgg16
+#
 combine.o: combine.c vgg16.o
 	$(CC) -o combine.o combine.c vgg16.o -lm
 

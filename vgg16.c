@@ -4,16 +4,27 @@
 #include <string.h>
 #include <math.h>
 
+int chooseodd(int zero) {
+  if (floor(zero / 2) * 2 == zero) {
+    return floor(zero / 2);
+  } else {
+    int temp = floor(zero / 2);
+    if (floor(temp / 2) * 2 == temp) {
+      return zero - temp;
+    } else {
+      return temp;
+    }
+  }
+}
+
 double*** convolution2D(double*** Layers, double*** mask, int* LayDim, int* maskDim, int stride, char* ZeroPadding) {
   //numbers of masks, horizontal lines in a mask, vertical lines in a mask
   int maskDimNum = *maskDim;
   int maskDimH = *(maskDim + 1);
   int maskDimV= *(maskDim + 2);
-  //dimension of layers, horizontal lines in a layer, vertical lines in a layer
   int inputNum = *LayDim;
   int inputH = *(LayDim + 1);
   int inputV = *(LayDim + 2);
-
   int outputH;
   int outputV;
   int zeroH;
@@ -29,7 +40,6 @@ double*** convolution2D(double*** Layers, double*** mask, int* LayDim, int* mask
     zeroH = stride * (outputH - 1) + maskDimH - inputH; if (zeroH > 0) {zeroH = 0;}
     zeroV = stride * (outputV - 1) + maskDimV - inputV; if (zeroV > 0) {zeroV = 0;}
   }
-  printf("%d %d %d %d\n", outputH, outputV, zeroH, zeroV);
   double *** ret = calloc(maskDimNum, sizeof(double**));
   for (int masknum = 0; masknum < maskDimNum; masknum++) {
     //for each mask a different operation
@@ -42,18 +52,20 @@ double*** convolution2D(double*** Layers, double*** mask, int* LayDim, int* mask
         for (int outputv = 0; outputv < outputV; outputv++) {
           int starth = outputh * stride;
           int startv = outputv * stride;
-          if (zeroH > 0) starth -= floor(zeroH / 2);
-          if (zeroV > 0) startv -= floor(zeroV / 2);
+          if (zeroH > 0) starth -= chooseodd(zeroH);
+          if (zeroV > 0) startv -= chooseodd(zeroV);
           // printf("(%d, %d)\n", starth, startv);
           for (int i = 0; i < maskDimH; i++) {
             for (int j = 0; j < maskDimV; j++) {
               if (starth + i < 0 || startv + j < 0 || starth + i >= inputH || startv + j >= inputV) {
                 continue;
               }
+              // if (ret[masknum][outputh][outputv] - 0 < 0.00001) ret[masknum][outputh][outputv] += 6.32135123e-02;
               // printf("(%d, %d) += mask(%d, %d) * origin(%d , %d)\n", outputh, outputv, i, j, starth + i, startv + j);
               ret[masknum][outputh][outputv] += mask[masknum][i][j] * Layers[layernum][starth + i][startv + j];
             }
           }
+          ret[masknum][outputh][outputv] += 6.32135123e-02;
         }
       }
     }
@@ -98,8 +110,8 @@ double *** MaxPooling2D(double *** Layers, int* LayDim, int* maskDim, int stride
       for (int outputv = 0; outputv < outputV; outputv++) {
         int starth = outputh * stride;
         int startv = outputv * stride;
-        if (zeroH > 0) starth -= floor(zeroH / 2);
-        if (zeroV > 0) startv -= floor(zeroV / 2);
+        if (zeroH > 0) starth -= chooseodd(zeroH);
+        if (zeroV > 0) startv -= chooseodd(zeroV);
         double max = -1000;
         for (int i = 0; i < maskDimH; i++) {
           for (int j = 0; j < maskDimV; j++) {
@@ -142,22 +154,17 @@ double * Dense(double* Layer, double** Weight, int WeiDimS, int WeiDimE, char * 
   }
   if (strncmp(activation, "relu", 4) == 0) {
     for (int i = 0; i < WeiDimE; i++) {
-      ret[i] = abs(ret[i]);
+      if (ret[i] < 0) ret[i] = 0;
     }
   } else if (strncmp(activation, "softmax", 7) == 0) {
     double sum = 0;
-    printf("layer\n");
     for (int i = 0; i < WeiDimE; i++) {
-      printf("%f ", ret[i]);
       ret[i] = exp(ret[i]);
       sum += ret[i];
     }
-    printf("\n");
     for (int i = 0; i < WeiDimE; i++) {
-      printf("%f ", ret[i]);
       ret[i] = ret[i] / sum;
     }
-    printf("\n");
   }
   return ret;
 }
@@ -167,11 +174,11 @@ double * Flatten(double*** Layers, int* LayDim) {
   int LayDimH = *(LayDim + 1);
   int LayDimV = *(LayDim + 2);
   double * ret = calloc(LayDimNum * LayDimH * LayDimV, sizeof(double));
-  printf("%d %d %d", LayDimNum, LayDimH, LayDimV);
   for (int i = 0; i < LayDimNum; i++) {
     for (int j = 0; j < LayDimH; j++) {
       for (int k = 0; k < LayDimV; k++) {
-        ret[i * LayDimH * LayDimV + j * LayDimV + k] = Layers[i][j][k];
+        int temp = (j * LayDimV + k) * LayDimNum + i;
+        ret[temp] = Layers[i][j][k];
       }
     }
   }
