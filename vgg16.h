@@ -3,7 +3,7 @@
 /**
   activation="relu"
  **/
-double*** convolution2D(double*** Layers, double*** mask, int* LayDim, int* maskDim, double * bias, int stride, char* ZeroPadding);
+double*** convolution2D(double*** Layers, double**** mask, int* LayDim, int* maskDim, double * bias, int stride, char* ZeroPadding);
 
 /**
  **/

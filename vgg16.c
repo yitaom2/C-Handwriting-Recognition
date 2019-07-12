@@ -17,7 +17,7 @@ int chooseodd(int zero) {
   }
 }
 
-double*** convolution2D(double*** Layers, double*** mask, int* LayDim, int* maskDim, double* bias, int stride, char* ZeroPadding) {
+double*** convolution2D(double*** Layers, double**** mask, int* LayDim, int* maskDim, double* bias, int stride, char* ZeroPadding) {
   //numbers of masks, horizontal lines in a mask, vertical lines in a mask
   int maskDimNum = *maskDim;
   int maskDimH = *(maskDim + 1);
@@ -62,7 +62,7 @@ double*** convolution2D(double*** Layers, double*** mask, int* LayDim, int* mask
               }
               // if (ret[masknum][outputh][outputv] - 0 < 0.00001) ret[masknum][outputh][outputv] += 6.32135123e-02;
               // printf("(%d, %d) += mask(%d, %d) * origin(%d , %d)\n", outputh, outputv, i, j, starth + i, startv + j);
-              ret[masknum][outputh][outputv] += mask[masknum][i][j] * Layers[layernum][starth + i][startv + j];
+              ret[masknum][outputh][outputv] += mask[masknum][layernum][i][j] * Layers[layernum][starth + i][startv + j];
             }
           }
           ret[masknum][outputh][outputv] += bias[masknum];

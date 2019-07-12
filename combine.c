@@ -194,30 +194,33 @@
 //   printf("=================================\n");
 // }
 
-double *** ConvWeight(char * layerName, int * layerDim) {
-  double *** weight = calloc(layerDim[0], sizeof(double**));
+double **** ConvWeight(char * layerName, int * layerDim) {
+  double **** weight = calloc(layerDim[0], sizeof(double***));
   for (int i = 0; i < layerDim[0]; i++) {
-    *(weight + i) = calloc(layerDim[1], sizeof(double*));
-
-    char filepath[55];
-    sprintf(filepath, "handWritRec/layerData/%s/%d", layerName, i);
-    FILE * weightfile = fopen(filepath, "r");
-
+    weight[i] = calloc(layerDim[1], sizeof(double**));
     for (int j = 0; j < layerDim[1]; j++) {
-      *(*(weight + i) + j) = calloc(layerDim[2], sizeof(double));
+      weight[i][j] = calloc(layerDim[2], sizeof(double*));
 
-      char * buffer = calloc(1000, 1);buffer[999] = '\0';
-      size_t linelength = 0;
-      ssize_t read = getline(&buffer, &linelength, weightfile);
+      char filepath[55];
+      sprintf(filepath, "handWritRec/layerData/%s/imageNum%d/%d", layerName, j, i);
+      FILE * weightfile = fopen(filepath, "r");
 
-      char * moving = buffer;
       for (int k = 0; k < layerDim[2]; k++) {
-        sscanf(moving, "%lf", &weight[i][j][k]);
-        moving = strstr(moving, " ") + 1;
+        weight[i][j][k] = calloc(layerDim[3], sizeof(double));
+
+        char * buffer = calloc(1000, 1);buffer[999] = '\0';
+        size_t linelength = 0;
+        ssize_t read = getline(&buffer, &linelength, weightfile);
+
+        char * moving = buffer;
+        for (int l = 0; l < layerDim[3]; l++) {
+          sscanf(moving, "%lf", &weight[i][j][k][l]);
+          moving = strstr(moving, " ") + 1;
+        }
+        free(buffer);
       }
-      free(buffer);
+      fclose(weightfile);
     }
-    fclose(weightfile);
   }
   return weight;
 }
@@ -294,7 +297,8 @@ void image_recognition(int imagenum) {
   int weightDim4[2] = {3136, 20};
   int weightDim5[2] = {20, 10};
 
-  double *** weight1 = ConvWeight("Conv1", weightDim1);
+  int revised_weightDim1[4] = {16, 1, 3, 3};
+  double **** weight1 = ConvWeight("Conv1", revised_weightDim1);
   double ** weight4 = DenseWeight("Dense1", weightDim4);
   double ** weight5 = DenseWeight("Dense2", weightDim5);
 
@@ -307,16 +311,12 @@ void image_recognition(int imagenum) {
   double * layerFlatten = Flatten(layerPool, layerDim3);
   double * layerDense1 = Dense(layerFlatten, weight4, bias4, 3136, 20, "relu");
   double * layerDense2 = Dense(layerDense1, weight5, bias5, 20, 10, "softmax");
-  //
-  // printf("HERE ARE THE RESULT:\n");
-  // for (int i = 0; i < 10; i++) {
-  //   printf("%f ", layerDense2[i]);
-  // }
-  // printf("\n");
 
+  printf("HERE ARE THE RESULT:\n");
   for (int i = 0; i < 10; i++) {
-    printf("%20.15lf ", layerDense2[i]);
+    printf("%20.15f ", layerDense2[i]);
   }
+  printf("\n");
 }
 
 int main(int argc, char * argv[]) {
