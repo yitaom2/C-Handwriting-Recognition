@@ -3,7 +3,7 @@
 /**
   activation="relu"
  **/
-double*** convolution2D(double*** Layers, double*** mask, int* LayDim, int* maskDim, int stride, char* ZeroPadding);
+double*** convolution2D(double*** Layers, double*** mask, int* LayDim, int* maskDim, double * bias, int stride, char* ZeroPadding);
 
 /**
  **/
@@ -11,7 +11,7 @@ double*** MaxPooling2D(double *** Layers, int* LayDim, int* maskDim, int stride,
 
 /**
  **/
-double * Dense(double* Layer, double** Weight, int WeiDimS, int WeiDimE, char * activation);
+double * Dense(double* Layer, double** Weight, double * bias, int WeiDimS, int WeiDimE, char * activation);
 
 /**
  **/

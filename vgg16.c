@@ -17,7 +17,7 @@ int chooseodd(int zero) {
   }
 }
 
-double*** convolution2D(double*** Layers, double*** mask, int* LayDim, int* maskDim, int stride, char* ZeroPadding) {
+double*** convolution2D(double*** Layers, double*** mask, int* LayDim, int* maskDim, double* bias, int stride, char* ZeroPadding) {
   //numbers of masks, horizontal lines in a mask, vertical lines in a mask
   int maskDimNum = *maskDim;
   int maskDimH = *(maskDim + 1);
@@ -65,7 +65,7 @@ double*** convolution2D(double*** Layers, double*** mask, int* LayDim, int* mask
               ret[masknum][outputh][outputv] += mask[masknum][i][j] * Layers[layernum][starth + i][startv + j];
             }
           }
-          ret[masknum][outputh][outputv] += 6.32135123e-02;
+          ret[masknum][outputh][outputv] += bias[masknum];
         }
       }
     }
@@ -96,7 +96,6 @@ double *** MaxPooling2D(double *** Layers, int* LayDim, int* maskDim, int stride
     zeroH = stride * (outputH - 1) + maskDimH - inputH; if (zeroH > 0) {zeroH = 0;}
     zeroV = stride * (outputV - 1) + maskDimV - inputV; if (zeroV > 0) {zeroV = 0;}
   }
-  printf("%d %d %d %d\n", outputH, outputV, zeroH, zeroV);
 
   double *** ret = calloc(inputNum, sizeof(double**));
   for (int laynum = 0; laynum < inputNum; laynum++) {
@@ -145,12 +144,15 @@ double *** MaxPooling2D(double *** Layers, int* LayDim, int* maskDim, int stride
   return ret;
 }
 
-double * Dense(double* Layer, double** Weight, int WeiDimS, int WeiDimE, char * activation) {
+double * Dense(double* Layer, double** Weight, double * bias, int WeiDimS, int WeiDimE, char * activation) {
   double * ret = calloc(WeiDimE, sizeof(double));
   for (int count = 0; count < WeiDimS; count++) {
     for (int neur = 0; neur < WeiDimE; neur++) {
       ret[neur] += Weight[count][neur] * Layer[count];
     }
+  }
+  for (int i = 0; i < WeiDimE; i++) {
+    ret[i] += bias[i];
   }
   if (strncmp(activation, "relu", 4) == 0) {
     for (int i = 0; i < WeiDimE; i++) {
