@@ -250,10 +250,15 @@ double ** DenseWeight(char * layerName, int * layerDim) {
 
 double *** createImage(int imagenum) {
   char filepath[50];
-  sprintf(filepath, "handWritRec/image/x_test/%d", imagenum);
+  sprintf(filepath, "handWritRec/image/x_test/%d.bmp", imagenum);
 
   FILE * imagefile = fopen(filepath, "r");
   char buffer[26]; buffer[25] = '\0';
+
+  // int offset;
+  // fseek(imagefile,10L,SEEK_SET);
+	// fread(&offset,1,4,imagefile);
+	// fseek(imagefile,offset, SEEK_SET);
 
   double *** image = calloc(1, sizeof(double**));
   *image = calloc(28, sizeof(double*));
@@ -289,7 +294,11 @@ double * getBias(char * layerName, int num) {
 }
 
 void image_recognition(int imagenum) {
-  double *** image = createImage(imagenum);
+  // double *** image = createImage(imagenum);
+  char path[50];path[49] = '\0';
+  sprintf(path, "handWritRec/image/x_test/%d.bmp", imagenum);
+  int * size = calloc(2, sizeof(int));
+  double *** image = getData(path, &size);
 
   int weightDim1[3] = {16, 4, 4}; int layerDim1[3] = {1, 28, 28};
   int maskDim2[3] = {2, 2}; int layerDim2[3] = {16, 25, 25};
@@ -318,11 +327,11 @@ void image_recognition(int imagenum) {
   }
   printf("\n");
   printf("---------------------------------------------------\n");
-  // for (int i = 0; i < 16; i++) {
+  // for (int i = 0; i < 1; i++) {
   //   printf("LAYER%d\n", i);
   //   for (int j = 0; j < 28; j++) {
   //     for (int k = 0; k < 28; k++) {
-  //       printf("%20.15f ", layerConv1[i][j][k]);
+  //       printf("%20.15f ", image[i][j][k]);
   //     }
   //     printf("\n");
   //   }

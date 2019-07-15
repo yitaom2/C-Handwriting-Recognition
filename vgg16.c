@@ -228,22 +228,22 @@ double *** getData(char * path, int ** size) {
 
 	unsigned char* pix=NULL;
 	fseek(fp,offset, SEEK_SET);
-	int stride = width * 4;
+	int stride = width;
 
 	pix=(unsigned char *)malloc(stride);
-	double *** ret = calloc(3, sizeof(double **));
+	double *** ret = calloc(1, sizeof(double **));
 	*(ret) = calloc(height, sizeof(double*));
-	*(ret + 1) = calloc(height, sizeof(double*));
-	*(ret + 2) = calloc(height, sizeof(double*));
+	// *(ret + 1) = calloc(height, sizeof(double*));
+	// *(ret + 2) = calloc(height, sizeof(double*));
 	for (int i = 0; i < height; i++) {
 		*(*ret + (height - 1 - i)) = calloc(width, sizeof(double));
-		*(*(ret + 1) + (height - 1 - i)) = calloc(width, sizeof(double));
-		*(*(ret + 2) + (height - 1 - i)) = calloc(width, sizeof(double));
+		// *(*(ret + 1) + (height - 1 - i)) = calloc(width, sizeof(double));
+		// *(*(ret + 2) + (height - 1 - i)) = calloc(width, sizeof(double));
 		fread(pix, 1, stride, fp);
 		for (int j = 0; j < width; j++) {
-			ret[0][height - 1 - i][width - 1 - j] = pix[j * 3 + 2];
-			ret[1][height - 1 - i][width - 1 - j] = pix[j * 3 + 1];
-			ret[2][height - 1 - i][width - 1 - j] = pix[j * 3];
+			ret[0][height - 1 - i][j] = pix[j];
+			// ret[1][height - 1 - i][width - 1 - j] = pix[j * 3 + 1];
+			// ret[2][height - 1 - i][width - 1 - j] = pix[j * 3];
 		}
 	}
   // for (int i = 0; i < height; i++) {
