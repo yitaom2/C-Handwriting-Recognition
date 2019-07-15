@@ -292,9 +292,9 @@ void image_recognition(int imagenum) {
   double *** image = createImage(imagenum);
 
   int weightDim1[3] = {16, 4, 4}; int layerDim1[3] = {1, 28, 28};
-  int maskDim2[3] = {2, 2}; int layerDim2[3] = {16, 28, 28};
-  int layerDim3[3] = {16, 14, 14};
-  int weightDim4[2] = {3136, 20};
+  int maskDim2[3] = {2, 2}; int layerDim2[3] = {16, 25, 25};
+  int layerDim3[3] = {16, 24, 24};
+  int weightDim4[2] = {9216, 20};
   int weightDim5[2] = {20, 10};
 
   int revised_weightDim1[4] = {16, 1, 4, 4};
@@ -306,10 +306,10 @@ void image_recognition(int imagenum) {
   double * bias4 = getBias("dense_1", 20);
   double * bias5 = getBias("dense_2", 10);
 
-  double *** layerConv1 = convolution2D(image, weight1, layerDim1, weightDim1, bias1, 1, "SAME");
-  double *** layerPool = MaxPooling2D(layerConv1, layerDim2, maskDim2, 2, "SAME");
+  double *** layerConv1 = convolution2D(image, weight1, layerDim1, weightDim1, bias1, 1, "VALID");
+  double *** layerPool = MaxPooling2D(layerConv1, layerDim2, maskDim2, 1, "VALID");
   double * layerFlatten = Flatten(layerPool, layerDim3);
-  double * layerDense1 = Dense(layerFlatten, weight4, bias4, 3136, 20, "relu");
+  double * layerDense1 = Dense(layerFlatten, weight4, bias4, 9216, 20, "relu");
   double * layerDense2 = Dense(layerDense1, weight5, bias5, 20, 10, "softmax");
 
   printf("THE RESULT FOR IMAGE %d: \n", imagenum);
