@@ -52,8 +52,8 @@ double*** convolution2D(double*** Layers, double**** mask, int* LayDim, int* mas
         for (int outputv = 0; outputv < outputV; outputv++) {
           int starth = outputh * stride;
           int startv = outputv * stride;
-          if (zeroH > 0) starth -= chooseodd(zeroH);
-          if (zeroV > 0) startv -= chooseodd(zeroV);
+          if (zeroH > 0) starth -= floor(zeroH / 2); //chooseodd(zeroH)
+          if (zeroV > 0) startv -= floor(zeroV / 2); //chooseodd(zeroV)
           // printf("(%d, %d)\n", starth, startv);
           for (int i = 0; i < maskDimH; i++) {
             for (int j = 0; j < maskDimV; j++) {
@@ -109,8 +109,8 @@ double *** MaxPooling2D(double *** Layers, int* LayDim, int* maskDim, int stride
       for (int outputv = 0; outputv < outputV; outputv++) {
         int starth = outputh * stride;
         int startv = outputv * stride;
-        if (zeroH > 0) starth -= chooseodd(zeroH);
-        if (zeroV > 0) startv -= chooseodd(zeroV);
+        if (zeroH > 0) starth -= floor(zeroH / 2); //chooseodd(zeroH)
+        if (zeroV > 0) startv -= floor(zeroV / 2); //chooseodd(zeroV)
         double max = -1000;
         for (int i = 0; i < maskDimH; i++) {
           for (int j = 0; j < maskDimV; j++) {

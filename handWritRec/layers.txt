@@ -1,0 +1,5 @@
+conv2d_1 1,28,28 16,4,4 1 SAME
+max_pooling2d_1 16,28,28 2,2 2 SAME
+flatten_1 16,14,14
+dense_1 3136 20 relu
+dense_2 20 10 softmax

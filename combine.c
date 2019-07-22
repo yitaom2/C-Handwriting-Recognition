@@ -293,6 +293,53 @@ double * getBias(char * layerName, int num) {
   return bias;
 }
 
+double *** ConvWripper(double *** input, char * line) {
+  char layName[100]; int LayDim[3]; int maskDim[3]; int stride; char ZeroPadding[10];
+  sscanf(line, "%s %d,%d,%d %d,%d,%d %d %s", layName,
+  LayDim, LayDim + 1, LayDim + 2,
+  maskDim, maskDim + 1, maskDim + 2,
+  &stride, ZeroPadding);
+  int revised_maskDim[4] = {maskDim[0], LayDim[0], maskDim[1], maskDim[2]};
+  double **** weight = ConvWeight(layName, revised_maskDim);
+  double * bias = getBias(layName, maskDim[0]);
+  double *** layerConv = convolution2D(input, weight, LayDim, maskDim, bias, stride, ZeroPadding);
+
+  return layerConv;
+}
+
+double *** MaxPoolingWripper(double *** input, char * line) {
+  char layName[100]; int LayDim[3]; int maskDim[2]; int stride; char ZeroPadding[10];
+  sscanf(line, "%s %d,%d,%d %d,%d %d %s", layName,
+  LayDim, LayDim + 1, LayDim + 2,
+  maskDim, maskDim + 1,
+  &stride, ZeroPadding);
+  printf("CHECK: %d %d\n", maskDim[0], maskDim[1]);
+  double *** layerPool = MaxPooling2D(input, LayDim, maskDim, stride, ZeroPadding);
+
+  return layerPool;
+}
+
+double * FlattenWripper(double *** input, char * line) {
+  char layName[100]; int LayDim[3];
+  sscanf(line, "%s %d,%d,%d", layName,
+  LayDim, LayDim + 1, LayDim + 2);
+  double * layerFlatten = Flatten(input, LayDim);
+
+  return layerFlatten;
+}
+
+
+double * DenseWripper(double * input, char * line) {
+  char layName[100]; int WeiDimS; int WeiDimE; char activation[10];
+  sscanf(line, "%s %d %d %s", layName, &WeiDimS, &WeiDimE, activation);
+  int weightDim[2] = {WeiDimS, WeiDimE};
+  double ** weight = DenseWeight(layName, weightDim);
+  double * bias = getBias(layName, WeiDimE);
+  double * layerDense = Dense(input, weight, bias, WeiDimS, WeiDimE, activation);
+
+  return layerDense;
+}
+
 void image_recognition(int imagenum) {
   // double *** image = createImage(imagenum);
   char path[50];path[49] = '\0';
@@ -300,41 +347,65 @@ void image_recognition(int imagenum) {
   int * size = calloc(2, sizeof(int));
   double *** image = getData(path, &size);
 
-  int weightDim1[3] = {16, 4, 4}; int layerDim1[3] = {1, 28, 28};
-  int maskDim2[3] = {2, 2}; int layerDim2[3] = {16, 25, 25};
-  int layerDim3[3] = {16, 24, 24};
-  int weightDim4[2] = {9216, 20};
-  int weightDim5[2] = {20, 10};
+  FILE * layernamefile = fopen("handWritRec/layers.txt", "r");
 
-  int revised_weightDim1[4] = {16, 1, 4, 4};
-  double **** weight1 = ConvWeight("conv2d_1", revised_weightDim1);
-  double ** weight4 = DenseWeight("dense_1", weightDim4);
-  double ** weight5 = DenseWeight("dense_2", weightDim5);
+  char * buffer = calloc(100, 1);buffer[99] = '\0';
+  size_t linelength = 0;
+  ssize_t read = getline(&buffer, &linelength, layernamefile);
 
-  double * bias1 = getBias("conv2d_1", 16);
-  double * bias4 = getBias("dense_1", 20);
-  double * bias5 = getBias("dense_2", 10);
+  double * a; double *** b = image;
+  while (read != -1) {
+    if (strncmp(buffer, "conv2d", 6) == 0) {
+      b = ConvWripper(b, buffer);
+    } else if (strncmp(buffer, "max_pooling2d", 13) == 0) {
+      b = MaxPoolingWripper(b, buffer);
+    } else if (strncmp(buffer, "flatten", 7) == 0) {
+      a = FlattenWripper(b, buffer);
+    } else if (strncmp(buffer, "dense", 5) == 0) {
+      a = DenseWripper(a, buffer);
+    }
+    free(buffer);
+    buffer = calloc(100, 1);buffer[99] = '\0';
+    linelength = 0;
+    read = getline(&buffer, &linelength, layernamefile);
+  }
+  fclose(layernamefile);
 
-  double *** layerConv1 = convolution2D(image, weight1, layerDim1, weightDim1, bias1, 1, "VALID");
-  double *** layerPool = MaxPooling2D(layerConv1, layerDim2, maskDim2, 1, "VALID");
-  double * layerFlatten = Flatten(layerPool, layerDim3);
-  double * layerDense1 = Dense(layerFlatten, weight4, bias4, 9216, 20, "relu");
-  double * layerDense2 = Dense(layerDense1, weight5, bias5, 20, 10, "softmax");
+  // int weightDim1[3] = {16, 4, 4}; int layerDim1[3] = {1, 28, 28};
+  // int maskDim2[3] = {2, 2}; int layerDim2[3] = {16, 28, 28};
+  // int layerDim3[3] = {16, 28, 28};
+  // int weightDim4[2] = {12544, 20};
+  // int weightDim5[2] = {20, 10};
+  //
+  // int revised_weightDim1[4] = {16, 1, 4, 4};
+  // double **** weight1 = ConvWeight("conv2d_1", revised_weightDim1);
+  // double ** weight4 = DenseWeight("dense_1", weightDim4);
+  // double ** weight5 = DenseWeight("dense_2", weightDim5);
+  //
+  // double * bias1 = getBias("conv2d_1", 16);
+  // double * bias4 = getBias("dense_1", 20);
+  // double * bias5 = getBias("dense_2", 10);
+  //
+  // double *** layerConv1 = convolution2D(image, weight1, layerDim1, weightDim1, bias1, 1, "SAME");
+  // double *** layerPool = MaxPooling2D(layerConv1, layerDim2, maskDim2, 1, "SAME");
+  // double * layerFlatten = Flatten(layerPool, layerDim3);
+  // double * layerDense1 = Dense(layerFlatten, weight4, bias4, 12544, 20, "relu");
+  // double * layerDense2 = Dense(layerDense1, weight5, bias5, 20, 10, "softmax");
 
   printf("THE RESULT FOR IMAGE %d: \n", imagenum);
   for (int i = 0; i < 10; i++) {
-    printf("%20.15f ", layerDense2[i]);
+    printf("%20.15f ", a[i]);
   }
   printf("\n");
   printf("---------------------------------------------------\n");
   // for (int i = 0; i < 1; i++) {
   //   printf("LAYER%d\n", i);
-  //   for (int j = 0; j < 28; j++) {
-  //     for (int k = 0; k < 28; k++) {
-  //       printf("%20.15f ", image[i][j][k]);
-  //     }
-  //     printf("\n");
-  //   }
+    // for (int j = 0; j < 25; j++) {
+    //   for (int k = 0; k < 25; k++) {
+    //     printf("%20.15f ", b[0][j][k]);
+    //   }
+    //   printf("\n");
+    // }
   // }
 }
 
