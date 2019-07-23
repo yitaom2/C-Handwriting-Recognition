@@ -65,7 +65,7 @@ double*** convolution2D(double*** Layers, double**** mask, int* LayDim, int* mas
               ret[masknum][outputh][outputv] += mask[masknum][layernum][i][j] * Layers[layernum][starth + i][startv + j];
             }
           }
-          ret[masknum][outputh][outputv] += bias[masknum];
+          if (layernum == 0) ret[masknum][outputh][outputv] += bias[masknum];
         }
       }
     }

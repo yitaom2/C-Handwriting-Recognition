@@ -400,8 +400,8 @@ void image_recognition(int imagenum) {
   printf("---------------------------------------------------\n");
   // for (int i = 0; i < 1; i++) {
   //   printf("LAYER%d\n", i);
-    // for (int j = 0; j < 25; j++) {
-    //   for (int k = 0; k < 25; k++) {
+    // for (int j = 0; j < 14; j++) {
+    //   for (int k = 0; k < 14; k++) {
     //     printf("%20.15f ", b[0][j][k]);
     //   }
     //   printf("\n");
