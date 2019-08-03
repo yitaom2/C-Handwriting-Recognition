@@ -313,7 +313,6 @@ double *** MaxPoolingWripper(double *** input, char * line) {
   LayDim, LayDim + 1, LayDim + 2,
   maskDim, maskDim + 1,
   &stride, ZeroPadding);
-  printf("CHECK: %d %d\n", maskDim[0], maskDim[1]);
   double *** layerPool = MaxPooling2D(input, LayDim, maskDim, stride, ZeroPadding);
 
   return layerPool;
